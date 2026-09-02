@@ -2,203 +2,135 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>ランダムグループ分けツール</title>
+    <title>じゃんけん大会 トーナメントツール</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
-        h1 { color: #2c3e50; font-size: 24px; }
+        body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
+        h1, h2, h3 { color: #2c3e50; }
         .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        textarea { width: 100%; height: 150px; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .drop-zone { border: 2px dashed #007bff; padding: 15px; text-align: center; background: #f0f8ff; border-radius: 4px; margin-bottom: 10px; color: #007bff; font-weight: bold; }
-        .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 15px; }
-        input[type="number"] { padding: 8px; font-size: 16px; width: 80px; border: 1px solid #ccc; border-radius: 4px; }
+        textarea { width: 100%; height: 120px; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .controls { display: flex; gap: 15px; margin-top: 15px; }
         button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
-        .secondary-btn { background: #6c757d; }
-        .secondary-btn:hover { background: #5a6268; }
-        .group-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .group-card h3 { margin-top: 0; color: #007bff; display: flex; justify-content: space-between; align-items: center; }
-        ul { margin: 0; padding-left: 20px; }
-        .note { font-size: 13px; color: #666; margin-top: 5px; }
-        .boy { color: #0056b3; }
-        .girl { color: #c82333; }
+        .reset-btn { background: #dc3545; }
+        .reset-btn:hover { background: #bd2130; }
+        .match-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .player { font-size: 18px; font-weight: bold; width: 35%; text-align: center; }
+        .vs { font-size: 14px; color: #888; }
+        .win-btn { padding: 6px 12px; font-size: 14px; background: #28a745; margin-left: 5px; }
+        .win-btn:hover { background: #218838; }
+        .winner-box { font-size: 24px; color: #d9534f; text-align: center; font-weight: bold; padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
 
-    <h1>ランダムグループ分けツール（完全版）</h1>
-    
-    <div class="box">
-        <div class="drop-zone" id="dropZone">
-            📁 ここに .txt ファイルをドラッグ＆ドロップ、または下のテキストを編集
-        </div>
-        <textarea id="inputData" placeholder="名前/男子 または 名前/女子 の形式で入力">佐藤健/男子
-鈴木花子/女子
-高橋航/男子
-田中美咲/女子
-伊藤蓮/男子
-渡辺葵/女子
-小林翔/男子
-中村さくら/女子</textarea>
-        <div class="note">※入力内容は自動でブラウザに保存されます。</div>
+    <h1>✊✌️✋ じゃんけん大会ツール</h1>
 
+    <div class="box">
+        <label><b>参加者一覧（1行に1名）</b></label>
+        <textarea id="playerData" placeholder="名前を入力">佐藤
+鈴木
+高橋
+田中
+伊藤
+渡辺
+小林</textarea>
         <div class="controls">
-            <label>1グループの人数: <input type="number" id="groupSize" value="3" min="1"></label>
-            <label><input type="checkbox" id="balanceGender" checked> 男女比を均等にする</label>
-            <button onclick="generateGroups()">グループを分ける</button>
-            <button class="secondary-btn" onclick="copyResults()">結果をコピー</button>
+            <button onclick="startTournament()">トーナメントを作成</button>
+            <button class="reset-btn" onclick="resetTournament()">リセット</button>
         </div>
     </div>
 
-    <h2>結果</h2>
-    <div id="result"></div>
+    <div id="tournamentArea"></div>
 
     <script>
-        const inputData = document.getElementById('inputData');
-        const dropZone = document.getElementById('dropZone');
+        let currentRoundPlayers = [];
+        let nextRoundPlayers = [];
+        let roundNumber = 1;
 
-        // 起動時にローカルストレージから復元
-        if (localStorage.getItem('savedMembers')) {
-            inputData.value = localStorage.getItem('savedMembers');
+        function startTournament() {
+            const rawText = document.getElementById('playerData').value;
+            let players = rawText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+
+            if (players.length < 2) {
+                alert('2名以上の参加者を入力してください。');
+                return;
+            }
+
+            // シャッフル
+            for (let i = players.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [players[i], players[j]] = [players[j], players[i]];
+            }
+
+            currentRoundPlayers = players;
+            nextRoundPlayers = [];
+            roundNumber = 1;
+
+            renderRound();
         }
 
-        // 入力変更時に自動保存
-        inputData.addEventListener('input', () => {
-            localStorage.setItem('savedMembers', inputData.value);
-        });
+        function renderRound() {
+            const area = document.getElementById('tournamentArea');
+            area.innerHTML = '';
 
-        // ドラッグ＆ドロップファイル読込
-        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = '#e2e8f0'; });
-        dropZone.addEventListener('dragleave', () => { dropZone.style.background = '#f0f8ff'; });
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropZone.style.background = '#f0f8ff';
-            const file = e.dataTransfer.files[0];
-            if (file && file.name.endsWith('.txt')) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    inputData.value = event.target.result;
-                    localStorage.setItem('savedMembers', inputData.value);
-                    alert('ファイルを読み込みました！');
-                };
-                reader.readAsText(file);
-            } else {
-                alert('.txtファイルをドロップしてください。');
-            }
-        });
-
-        function generateGroups() {
-            const rawText = inputData.value;
-            const groupSize = parseInt(document.getElementById('groupSize').value);
-            const balanceGender = document.getElementById('balanceGender').checked;
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = '';
-
-            const lines = rawText.split('\n');
-            let boys = [];
-            let girls = [];
-
-            for (let line of lines) {
-                line = line.trim();
-                if (!line) continue;
-                const parts = line.split('/');
-                if (parts.length >= 2) {
-                    const name = parts[0].trim();
-                    const gender = parts[1].trim();
-                    if (gender === '男子') {
-                        boys.push({ name, gender });
-                    } else if (gender === '女子') {
-                        girls.push({ name, gender });
-                    } else {
-                        // 男子・女子以外の場合は男子扱いまたはその他として処理
-                        boys.push({ name, gender });
-                    }
-                }
-            }
-
-            if (boys.length === 0 && girls.length === 0) {
-                resultDiv.innerHTML = '<p style="color:red;">有効なデータがありません。</p>';
+            if (currentRoundPlayers.length === 1) {
+                area.innerHTML = `<div class="winner-box">🏆 優勝：${currentRoundPlayers[0]} 選手！ 🏆</div>`;
                 return;
             }
 
-            if (isNaN(groupSize) || groupSize <= 0) {
-                resultDiv.innerHTML = '<p style="color:red;">有効な人数を入力してください。</p>';
-                return;
+            let html = `<h2>第 ${roundNumber} 回戦</h2>`;
+            let matchesCount = Math.floor(currentRoundPlayers.length / 2);
+
+            // 不戦勝の処理
+            if (currentRoundPlayers.length % 2 !== 0) {
+                const byePlayer = currentRoundPlayers.pop();
+                nextRoundPlayers.push(byePlayer);
+                html += `<p style="color:#666;">※ ${byePlayer} 選手は不戦勝で次のラウンドへ進出</p>`;
             }
 
-            // シャッフル関数
-            function shuffle(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-                return array;
+            area.innerHTML = html;
+
+            for (let i = 0; i < currentRoundPlayers.length; i += 2) {
+                const p1 = currentRoundPlayers[i];
+                const p2 = currentRoundPlayers[i + 1];
+                const matchId = `match_${i}`;
+
+                const matchDiv = document.createElement('div');
+                matchDiv.className = 'match-card';
+                matchDiv.id = matchId;
+                matchDiv.innerHTML = `
+                    <div class="player">${p1} <button class="win-btn" onclick="recordWin('${p1}', '${matchId}')">勝利</button></div>
+                    <div class="vs">VS</div>
+                    <div class="player">${p2} <button class="win-btn" onclick="recordWin('${p2}', '${matchId}')">勝利</button></div>
+                `;
+                area.appendChild(matchDiv);
             }
-
-            let groups = [];
-
-            if (balanceGender) {
-                shuffle(boys);
-                shuffle(girls);
-                
-                // 全体のグループ数を算出
-                const totalMembers = boys.length + girls.length;
-                const numGroups = Math.ceil(totalMembers / groupSize);
-                
-                for (let i = 0; i < numGroups; i++) {
-                    groups.push([]);
-                }
-
-                // 男子を均等配分
-                boys.forEach((boy, idx) => {
-                    groups[idx % numGroups].push(boy);
-                });
-                // 女子を均等配分
-                girls.forEach((girl, idx) => {
-                    groups[idx % numGroups].push(girl);
-                });
-
-                // 各グループ内もランダム順に並び替え
-                groups.forEach(group => shuffle(group));
-
-            } else {
-                let allMembers = shuffle([...boys, ...girls]);
-                for (let i = 0; i < allMembers.length; i += groupSize) {
-                    groups.push(allMembers.slice(i, i + groupSize));
-                }
-            }
-
-            // 画面表示
-            groups.forEach((group, index) => {
-                let card = document.createElement('div');
-                card.className = 'group-card';
-                card.innerHTML = `<h3>第 ${index + 1} グループ <span style="font-size:12px; font-weight:normal; color:#666;">(${group.length}人)</span></h3>`;
-                let ul = document.createElement('ul');
-                group.forEach(member => {
-                    let li = document.createElement('li');
-                    let cssClass = member.gender === '男子' ? 'boy' : (member.gender === '女子' ? 'girl' : '');
-                    li.innerHTML = `<span class="${cssClass}">${member.name} (${member.gender})</span>`;
-                    ul.appendChild(li);
-                });
-                card.appendChild(ul);
-                resultDiv.appendChild(card);
-            });
         }
 
-        function copyResults() {
-            const cards = document.querySelectorAll('.group-card');
-            if (cards.length === 0) {
-                alert('コピーする結果がありません。');
-                return;
+        function recordWin(winner, matchId) {
+            nextRoundPlayers.push(winner);
+            const card = document.getElementById(matchId);
+            card.style.opacity = '0.4';
+            card.querySelectorAll('button').forEach(btn => btn.disabled = true);
+
+            // 全試合終了したら次のラウンドへ
+            const totalMatchesInRound = Math.floor(currentRoundPlayers.length / 2);
+            const completedMatches = card.parentNode.querySelectorAll('.match-card[style*="opacity"]').length;
+
+            if (completedMatches === totalMatchesInRound) {
+                currentRoundPlayers = [...nextRoundPlayers];
+                nextRoundPlayers = [];
+                roundNumber++;
+                setTimeout(renderRound, 800);
             }
-            let textToCopy = '';
-            cards.forEach(card => {
-                textToCopy += card.innerText + '\n\n';
-            });
-            navigator.clipboard.writeText(textToCopy).then(() => {
-                alert('グループ分けの結果をクリップボードにコピーしました！');
-            });
+        }
+
+        function resetTournament() {
+            document.getElementById('tournamentArea').innerHTML = '';
+            currentRoundPlayers = [];
+            nextRoundPlayers = [];
+            roundNumber = 1;
         }
     </script>
-
 </body>
 </html>
