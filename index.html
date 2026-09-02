@@ -1,231 +1,744 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <title>じゃんけん大会 トーナメントツール（確定ボタン式）</title>
-    <style>
-        body { font-family: sans-serif; max-width: 850px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
-        h1 { color: #2c3e50; font-size: 24px; }
-        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        textarea { width: 100%; height: 120px; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 15px; }
-        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
-        button:hover { background: #0056b3; }
-        .reset-btn { background: #dc3545; }
-        .reset-btn:hover { background: #bd2130; }
-        .confirm-btn { background: #28a745; width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; font-size: 18px; }
-        .confirm-btn:hover { background: #218838; }
-        .note { font-size: 13px; color: #666; margin-top: 5px; }
-        
-        /* 対戦入力カード */
-        .match-card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; border-radius: 6px; display: flex; justify-content: space-around; align-items: center; }
-        .player-option { font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .player-option input { transform: scale(1.4); cursor: pointer; }
-        .vs { font-size: 14px; color: #888; font-weight: bold; }
-        
-        /* トーナメント表表示 */
-        .tournament-tree { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-top: 15px; }
-        .round-block { margin-bottom: 15px; }
-        .round-title { font-weight: bold; color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin-bottom: 8px; }
-        .tree-match { font-size: 14px; background: white; padding: 6px 10px; margin: 4px 0; border-radius: 4px; border-left: 3px solid #ccc; display: flex; justify-content: space-between; }
-        .tree-winner { font-weight: bold; color: #28a745; }
-        .winner-box { font-size: 24px; color: #d9534f; text-align: center; font-weight: bold; padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeeba; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f172a">
+  <title>じゃんけん大会マネージャー</title>
+  <style>
+    :root {
+      --bg: #eef2ff;
+      --panel: rgba(255,255,255,.94);
+      --panel-solid: #fff;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #dbe3ef;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --shadow: 0 16px 40px rgba(15, 23, 42, .10);
+      --radius: 20px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(59,130,246,.18), transparent 28rem),
+        radial-gradient(circle at 90% 10%, rgba(168,85,247,.16), transparent 24rem),
+        var(--bg);
+    }
+
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      width: min(1180px, calc(100% - 28px));
+      margin: 0 auto;
+      padding: 28px 0 52px;
+    }
+
+    .hero {
+      color: white;
+      padding: 30px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 58%, #2563eb 100%);
+      box-shadow: 0 22px 60px rgba(30, 58, 138, .24);
+      margin-bottom: 20px;
+    }
+    .hero h1 { margin: 0 0 8px; font-size: clamp(28px, 4vw, 44px); letter-spacing: -.03em; }
+    .hero p { margin: 0; color: rgba(255,255,255,.82); line-height: 1.7; }
+
+    .layout { display: grid; grid-template-columns: 360px 1fr; gap: 20px; align-items: start; }
+    .stack { display: grid; gap: 20px; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      backdrop-filter: blur(14px);
+    }
+    .panel h2 { margin: 0 0 14px; font-size: 20px; }
+    .panel h3 { margin: 0 0 10px; font-size: 17px; }
+
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+    label.title { display: block; font-weight: 800; margin-bottom: 7px; }
+    .help { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+    textarea {
+      width: 100%;
+      min-height: 250px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 13px;
+      outline: none;
+      background: #f8fafc;
+    }
+    textarea:focus, select:focus { border-color: #93c5fd; box-shadow: 0 0 0 4px rgba(37,99,235,.10); }
+
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 11px 12px;
+      background: #fff;
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 15px;
+      font-weight: 800;
+      transition: transform .15s ease, background .15s ease, opacity .15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+    .btn-primary { color: #fff; background: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { color: #0f172a; background: #e2e8f0; }
+    .btn-success { color: #fff; background: var(--success); }
+    .btn-warning { color: #fff; background: var(--warning); }
+    .btn-danger { color: #fff; background: var(--danger); }
+    .btn-ghost { color: #334155; background: transparent; border: 1px solid var(--line); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+    .stat {
+      padding: 12px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      text-align: center;
+    }
+    .stat strong { display: block; font-size: 22px; }
+    .stat span { display: block; color: var(--muted); font-size: 11px; margin-top: 2px; }
+
+    .empty {
+      padding: 42px 18px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 18px;
+      text-align: center;
+      color: var(--muted);
+      background: rgba(248,250,252,.7);
+    }
+
+    .notice {
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      line-height: 1.6;
+      font-size: 13px;
+    }
+    .notice.info { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+    .notice.success { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .notice.warn { background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; }
+
+    .round-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .round-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 900;
+      font-size: 13px;
+    }
+    .round-header p { margin: 0; color: var(--muted); font-size: 13px; }
+
+    .matches { display: grid; gap: 12px; }
+    .match {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: stretch;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      background: #fff;
+    }
+    .match.selected { border-color: #86efac; box-shadow: 0 0 0 3px rgba(34,197,94,.08); }
+    .side {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .player-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      border: 2px solid #e2e8f0;
+      border-radius: 15px;
+      padding: 13px;
+      background: #f8fafc;
+      color: var(--text);
+      text-align: left;
+      min-height: 74px;
+    }
+    .player-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+    .player-btn.is-winner {
+      border-color: #4ade80;
+      background: #f0fdf4;
+    }
+    .player-check {
+      width: 25px;
+      height: 25px;
+      accent-color: var(--success);
+      pointer-events: none;
+      flex: 0 0 auto;
+    }
+    .player-meta { min-width: 0; }
+    .player-name { font-weight: 900; font-size: 16px; overflow-wrap: anywhere; }
+    .gender {
+      display: inline-flex;
+      margin-top: 4px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      color: #475569;
+      font-size: 11px;
+      font-weight: 800;
+    }
+    .vs { display: grid; place-items: center; padding: 0 3px; color: #94a3b8; font-weight: 1000; font-size: 13px; }
+    .bye { text-align: center; font-weight: 800; color: #9a3412; background: #fff7ed; border: 1px dashed #fdba74; border-radius: 12px; padding: 14px; }
+
+    .actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+
+    .bracket-wrap { overflow-x: auto; padding-bottom: 4px; }
+    .bracket {
+      display: flex;
+      gap: 18px;
+      min-width: max-content;
+      align-items: flex-start;
+    }
+    .bracket-round { width: 240px; }
+    .bracket-round h4 { margin: 0 0 9px; font-size: 13px; color: #475569; }
+    .bracket-match {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      overflow: hidden;
+      margin-bottom: 12px;
+      box-shadow: 0 7px 16px rgba(15,23,42,.05);
+    }
+    .bracket-match .line {
+      padding: 9px 10px;
+      border-bottom: 1px solid #eef2f7;
+      font-size: 13px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bracket-match .line:last-child { border-bottom: 0; }
+    .bracket-match .win { font-weight: 900; color: #15803d; }
+    .bracket-match .pending { color: #94a3b8; }
+
+    .winner {
+      text-align: center;
+      padding: 26px 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #fef3c7, #fff7ed);
+      border: 1px solid #fcd34d;
+    }
+    .winner .trophy { font-size: 50px; }
+    .winner h2 { margin: 6px 0 4px; font-size: 28px; }
+    .winner p { margin: 0; color: #92400e; }
+
+    .participants-preview { display: grid; gap: 8px; max-height: 320px; overflow: auto; }
+    .person {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 9px 11px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #fff;
+    }
+    .person .left { display: flex; gap: 8px; align-items: center; min-width: 0; }
+    .person .idx { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 900; flex: 0 0 auto; }
+    .person .name { font-weight: 800; overflow-wrap: anywhere; }
+    .person .g { color: var(--muted); font-size: 11px; }
+
+    .footer-note { margin-top: 16px; text-align: center; color: #64748b; font-size: 12px; }
+
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .app { width: min(100% - 14px, 1180px); padding-top: 8px; }
+      .hero, .panel { border-radius: 18px; padding: 16px; }
+      .match { grid-template-columns: 1fr; }
+      .vs { padding: 1px 0; }
+      .stats { grid-template-columns: repeat(3, 1fr); }
+    }
+  </style>
 </head>
 <body>
+  <main class="app">
+    <section class="hero">
+      <h1>✊✌️✋ じゃんけん大会マネージャー</h1>
+      <p>参加者を男女バランスを考えて2人組にし、勝者を次のラウンドで再編成。大会全体の対戦履歴も自動で残します。</p>
+    </section>
 
-    <h1>✊✌️✋ じゃんけん大会 トーナメントツール</h1>
+    <div class="layout">
+      <aside class="stack">
+        <section class="panel">
+          <h2>👥 参加者を登録</h2>
+          <div class="field">
+            <label class="title" for="playerData">名前 / 性別</label>
+            <textarea id="playerData" spellcheck="false" placeholder="例：
+田中太郎 / 男子
+佐藤花子 / 女子
+鈴木一郎 / 男子
+山田美咲 / 女子"></textarea>
+            <div class="help">1行1人。「名前 / 男子」「名前 / 女子」の形式。/ の代わりに「名前,男子」やタブ区切りでも読み取れます。</div>
+          </div>
 
-    <div class="box">
-        <label><b>参加者一覧（1行に1名）</b></label>
-        <textarea id="playerData" placeholder="名前を入力">佐藤健
-鈴木花子
-高橋航
-田中美咲
-伊藤蓮
-渡辺葵
-小林翔
-中村さくら</textarea>
-        <div class="note">※入力内容は自動でブラウザに保存されます。</div>
+          <div class="field">
+            <label class="title" for="pairMode">ペアの組み方</label>
+            <select id="pairMode">
+              <option value="mixed" selected>男女ミックスを優先</option>
+              <option value="random">完全ランダム</option>
+            </select>
+          </div>
 
-        <div class="controls">
-            <button onclick="startTournament()">トーナメントを作成</button>
-            <button class="reset-btn" onclick="resetTournament()">リセット</button>
+          <div class="stats">
+            <div class="stat"><strong id="countAll">0</strong><span>参加者</span></div>
+            <div class="stat"><strong id="countBoys">0</strong><span>男子</span></div>
+            <div class="stat"><strong id="countGirls">0</strong><span>女子</span></div>
+          </div>
+
+          <div class="row">
+            <button class="btn btn-primary" id="startBtn">🎲 大会を開始</button>
+            <button class="btn btn-secondary" id="clearInputBtn">入力を消す</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>📋 登録メンバー</h2>
+          <div id="peoplePreview" class="participants-preview"></div>
+        </section>
+      </aside>
+
+      <section class="stack">
+        <section class="panel" id="gamePanel">
+          <div class="empty">
+            <div style="font-size:36px">🏁</div>
+            <h2 style="margin:8px 0 6px">まだ大会が始まっていません</h2>
+            <p style="margin:0">左で参加者を入力して「大会を開始」を押してください。</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="round-header">
+            <div>
+              <h2 style="margin:0">🗺️ 対戦図・大会履歴</h2>
+              <p>各ラウンド終了後、勝者が次のラウンドへ進みます。</p>
+            </div>
+            <button class="btn btn-ghost" id="rerollBtn" style="display:none">🔀 現ラウンドを組み直す</button>
+          </div>
+          <div id="bracketArea" class="bracket-wrap">
+            <div class="empty">対戦図は大会開始後にここへ表示されます。</div>
+          </div>
+        </section>
+
+        <div class="footer-note">入力・大会データはこのブラウザの localStorage にのみ保存されます。</div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    'use strict';
+
+    const STORAGE_KEY = 'jankenTournamentManager_v2';
+
+    const $ = (id) => document.getElementById(id);
+    const playerData = $('playerData');
+    const pairMode = $('pairMode');
+    const gamePanel = $('gamePanel');
+    const bracketArea = $('bracketArea');
+    const rerollBtn = $('rerollBtn');
+    const peoplePreview = $('peoplePreview');
+
+    let state = {
+      players: [],
+      round: 0,
+      currentMatches: [],
+      history: [],
+      champion: null,
+      running: false
+    };
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function shuffle(list) {
+      const a = [...list];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function normalizeGender(value) {
+      const v = value.trim();
+      if (/^(男|男子|m|male)$/i.test(v)) return '男子';
+      if (/^(女|女子|f|female)$/i.test(v)) return '女子';
+      return v || '未設定';
+    }
+
+    function parsePlayers(text) {
+      const result = [];
+      const seen = new Set();
+      const lines = text.split(/\r?\n/);
+
+      lines.forEach((line, index) => {
+        const raw = line.trim();
+        if (!raw) return;
+
+        const parts = raw.split(/\s*(?:\/|,|，|\t)\s*/).filter(Boolean);
+        const name = (parts[0] || '').trim();
+        const gender = normalizeGender(parts[1] || '未設定');
+
+        if (!name) return;
+        if (seen.has(name)) throw new Error(`${index + 1}行目：名前「${name}」が重複しています。`);
+        seen.add(name);
+        result.push({ id: `${Date.now()}_${index}_${Math.random().toString(36).slice(2, 8)}`, name, gender });
+      });
+
+      if (result.length < 2) throw new Error('参加者は2人以上入力してください。');
+      return result;
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ playerText: playerData.value, state }));
+    }
+
+    function restore() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const saved = JSON.parse(raw);
+        if (typeof saved.playerText === 'string') playerData.value = saved.playerText;
+        if (saved.state && Array.isArray(saved.state.players)) state = saved.state;
+      } catch (_) {
+        localStorage.removeItem(STORAGE_KEY);
+      }
+      updateCounts();
+      renderPeoplePreview();
+      renderGame();
+      renderBracket();
+    }
+
+    function updateCounts() {
+      try {
+        const people = playerData.value.trim() ? parsePlayers(playerData.value) : [];
+        $('countAll').textContent = people.length;
+        $('countBoys').textContent = people.filter(p => p.gender === '男子').length;
+        $('countGirls').textContent = people.filter(p => p.gender === '女子').length;
+      } catch (_) {
+        $('countAll').textContent = '—';
+        $('countBoys').textContent = '—';
+        $('countGirls').textContent = '—';
+      }
+    }
+
+    function renderPeoplePreview() {
+      let people = [];
+      try { people = playerData.value.trim() ? parsePlayers(playerData.value) : []; } catch (_) {}
+
+      if (!people.length) {
+        peoplePreview.innerHTML = '<div class="empty" style="padding:22px 12px">まだ登録されていません。</div>';
+        return;
+      }
+
+      peoplePreview.innerHTML = people.map((p, i) => `
+        <div class="person">
+          <div class="left">
+            <div class="idx">${i + 1}</div>
+            <div>
+              <div class="name">${escapeHtml(p.name)}</div>
+              <div class="g">${escapeHtml(p.gender)}</div>
+            </div>
+          </div>
         </div>
-    </div>
+      `).join('');
+    }
 
-    <!-- 勝敗選択エリア -->
-    <div id="matchArea" class="box" style="display:none;">
-        <h2 id="currentRoundTitle"></h2>
-        <div id="matchesContainer"></div>
-        <button class="confirm-btn" onclick="confirmWinners()">勝者を確定して次の対戦へ ➔</button>
-    </div>
+    function makePairings(players, mode = 'mixed') {
+      let list = shuffle(players);
+      const pairs = [];
 
-    <!-- 優勝表示 -->
-    <div id="winnerArea"></div>
+      if (mode === 'random') {
+        for (let i = 0; i < list.length; i += 2) pairs.push(list.slice(i, i + 2));
+        return pairs;
+      }
 
-    <!-- 全体トーナメント表 -->
-    <div class="box">
-        <h2>📊 トーナメント表・進行状況</h2>
-        <div id="tournamentTree" class="tournament-tree">まだトーナメントが作られていません。</div>
-    </div>
+      const boys = shuffle(list.filter(p => p.gender === '男子'));
+      const girls = shuffle(list.filter(p => p.gender === '女子'));
+      const others = shuffle(list.filter(p => p.gender !== '男子' && p.gender !== '女子'));
 
-    <script>
-        const playerData = document.getElementById('playerData');
-        let currentRoundPlayers = [];
-        let nextRoundPlayers = [];
-        let roundNumber = 1;
-        let tournamentHistory = []; // 全体表用の履歴データ
+      while (boys.length && girls.length) pairs.push([boys.pop(), girls.pop()]);
 
-        // 自動保存・復元
-        if (localStorage.getItem('savedJankenPlayers')) {
-            playerData.value = localStorage.getItem('savedJankenPlayers');
-        }
-        playerData.addEventListener('input', () => {
-            localStorage.setItem('savedJankenPlayers', playerData.value);
-        });
+      // 男女を組み切ったら残りを同性/未設定で組む。
+      const remaining = shuffle([...boys, ...girls, ...others]);
+      while (remaining.length >= 2) pairs.push([remaining.pop(), remaining.pop()]);
+      if (remaining.length === 1) pairs.push([remaining.pop()]);
 
-        // シャッフル関数
-        function shuffle(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
+      return shuffle(pairs);
+    }
 
-        // トーナメント開始
-        function startTournament() {
-            const rawText = playerData.value;
-            let players = rawText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+    function startTournament() {
+      try {
+        const players = parsePlayers(playerData.value);
+        state = { players, round: 1, currentMatches: [], history: [], champion: null, running: true };
+        nextRound(players, true);
+        save();
+      } catch (error) {
+        alert(error.message || '参加者の入力を確認してください。');
+      }
+    }
 
-            if (players.length < 2) {
-                alert('2名以上の参加者を入力してください。');
-                return;
-            }
+    function nextRound(players, firstRound = false) {
+      if (players.length === 1) {
+        state.champion = players[0];
+        state.running = false;
+        state.currentMatches = [];
+        renderGame();
+        renderBracket();
+        save();
+        return;
+      }
 
-            currentRoundPlayers = shuffle([...players]);
-            nextRoundPlayers = [];
-            roundNumber = 1;
-            tournamentHistory = [];
+      const pairings = makePairings(players, firstRound ? pairMode.value : pairMode.value);
+      state.currentMatches = pairings.map((pair, index) => ({
+        id: `${state.round}_${index}_${Math.random().toString(36).slice(2, 8)}`,
+        players: pair,
+        winnerId: pair.length === 1 ? pair[0].id : null,
+        bye: pair.length === 1
+      }));
 
-            document.getElementById('winnerArea').innerHTML = '';
-            document.getElementById('matchArea').style.display = 'block';
+      // 不戦勝は自動確定。
+      state.currentMatches.forEach(m => {
+        if (m.bye) m.winnerId = m.players[0].id;
+      });
+      renderGame();
+      renderBracket();
+      save();
+    }
 
-            setupRound();
-        }
+    function selectWinner(matchId, playerId) {
+      if (!state.running) return;
+      const match = state.currentMatches.find(m => m.id === matchId);
+      if (!match || match.bye) return;
+      match.winnerId = playerId;
+      renderGame();
+      save();
+    }
 
-        // ラウンドの準備と描画
-        function setupRound() {
-            const container = document.getElementById('matchesContainer');
-            container.innerHTML = '';
+    function confirmRound() {
+      if (!state.running) return;
+      const incomplete = state.currentMatches.find(m => !m.winnerId);
+      if (incomplete) {
+        alert('まだ勝者が選ばれていない対戦があります。各対戦で勝者を1人選んでください。');
+        return;
+      }
 
-            // 優勝決定
-            if (currentRoundPlayers.length === 1) {
-                document.getElementById('matchArea').style.display = 'none';
-                document.getElementById('winnerArea').innerHTML = `<div class="winner-box">🏆 優勝：${currentRoundPlayers[0]} 選手！ 🏆</div>`;
-                renderTree();
-                return;
-            }
+      const winners = state.currentMatches
+        .map(m => m.players.find(p => p.id === m.winnerId))
+        .filter(Boolean);
 
-            document.getElementById('currentRoundTitle').innerText = `第 ${roundNumber} 回戦`;
+      const snapshot = JSON.parse(JSON.stringify({ round: state.round, matches: state.currentMatches }));
+      state.history.push(snapshot);
 
-            let roundMatches = [];
-            let playersCopy = [...currentRoundPlayers];
+      if (winners.length === 1) {
+        state.round = state.round;
+        state.currentMatches = [];
+        state.champion = winners[0];
+        state.running = false;
+      } else {
+        state.round += 1;
+        nextRound(winners, false);
+      }
 
-            // 不戦勝処理
-            if (playersCopy.length % 2 !== 0) {
-                const byePlayer = playersCopy.pop();
-                nextRoundPlayers.push(byePlayer);
-                roundMatches.push({ p1: byePlayer, p2: '（不戦勝）', winner: byePlayer, isBye: true });
-            }
+      renderGame();
+      renderBracket();
+      save();
+    }
 
-            // 対戦ペアの描画
-            for (let i = 0; i < playersCopy.length; i += 2) {
-                const p1 = playersCopy[i];
-                const p2 = playersCopy[i + 1];
-                const matchName = `match_${i}`;
+    function rerollCurrentRound() {
+      if (!state.running || !state.currentMatches.length) return;
+      const entrants = state.currentMatches.flatMap(m => m.players);
+      if (!confirm('現在のラウンドだけ組み直しますか？登録済みの勝敗はこのラウンドについて無効になります。')) return;
+      nextRound(entrants, false);
+      save();
+    }
 
-                roundMatches.push({ p1, p2, winner: null, isBye: false, name: matchName });
+    function renderGame() {
+      if (!state.running && state.champion) {
+        gamePanel.innerHTML = `
+          <div class="winner">
+            <div class="trophy">🏆</div>
+            <h2>優勝：${escapeHtml(state.champion.name)}</h2>
+            <p>${escapeHtml(state.champion.gender)}・全ラウンドを勝ち抜きました！</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="window.scrollTo({top: document.body.scrollHeight, behavior:'smooth'})">対戦図を見る</button>
+            <button class="btn btn-danger" onclick="resetTournament()">大会をリセット</button>
+          </div>
+        `;
+        rerollBtn.style.display = 'none';
+        return;
+      }
 
-                const matchDiv = document.createElement('div');
-                matchDiv.className = 'match-card';
-                matchDiv.innerHTML = `
-                    <label class="player-option">
-                        <input type="radio" name="${matchName}" value="${p1}"> ${p1}
-                    </label>
-                    <div class="vs">VS</div>
-                    <label class="player-option">
-                        <input type="radio" name="${matchName}" value="${p2}"> ${p2}
-                    </label>
-                `;
-                container.appendChild(matchDiv);
-            }
+      if (!state.running || !state.currentMatches.length) {
+        gamePanel.innerHTML = '<div class="empty"><div style="font-size:36px">🏁</div><h2 style="margin:8px 0 6px">まだ大会が始まっていません</h2><p style="margin:0">左で参加者を入力して「大会を開始」を押してください。</p></div>';
+        rerollBtn.style.display = 'none';
+        return;
+      }
 
-            tournamentHistory.push({ round: roundNumber, matches: roundMatches });
-            renderTree();
-        }
+      const byeCount = state.currentMatches.filter(m => m.bye).length;
+      gamePanel.innerHTML = `
+        <div class="round-header">
+          <div>
+            <div class="round-badge">ROUND ${state.round}</div>
+            <h2 style="margin:10px 0 2px">第${state.round}ラウンド</h2>
+            <p>2人のうち、じゃんけんで勝った人をタップして選択してください。</p>
+          </div>
+          <div class="help">${state.currentMatches.length}対戦${byeCount ? ` ＋ 不戦勝${byeCount}人` : ''}</div>
+        </div>
+        <div class="notice info">✅ 選んだ人にはチェックが付きます。全試合を選択してから「勝者を確定」を押すと、勝者だけで次のラウンドの2人組を自動編成します。</div>
+        <div class="matches">
+          ${state.currentMatches.map((m, index) => renderMatch(m, index)).join('')}
+        </div>
+        <div class="actions">
+          <button class="btn btn-warning" onclick="rerollCurrentRound()">🔀 組み直す</button>
+          <button class="btn btn-success" onclick="confirmRound()">✅ 勝者を確定して次へ</button>
+        </div>
+      `;
+      rerollBtn.style.display = 'inline-flex';
+    }
 
-        // 確定ボタンを押したときの処理
-        function confirmWinners() {
-            const currentHistory = tournamentHistory[tournamentHistory.length - 1];
-            let activeMatches = currentHistory.matches.filter(m => !m.isBye);
-            let selectedWinners = [];
+    function renderMatch(match, index) {
+      if (match.bye) {
+        const p = match.players[0];
+        return `
+          <div class="match">
+            <div class="bye" style="grid-column:1 / -1">${index + 1}試合目：${escapeHtml(p.name)} さんは不戦勝 → 次のラウンドへ</div>
+          </div>
+        `;
+      }
 
-            for (let match of activeMatches) {
-                const checked = document.querySelector(`input[name="${match.name}"]:checked`);
-                if (!checked) {
-                    alert('全ての試合の勝者を選択してください！');
-                    return;
-                }
-                match.winner = checked.value;
-                selectedWinners.push(checked.value);
-            }
+      return `
+        <div class="match ${match.winnerId ? 'selected' : ''}">
+          ${match.players.map((p, i) => `
+            <div class="side">
+              <button class="player-btn ${match.winnerId === p.id ? 'is-winner' : ''}" onclick="selectWinner('${match.id}','${p.id}')" aria-label="${escapeHtml(p.name)}を勝者にする">
+                <input class="player-check" type="checkbox" ${match.winnerId === p.id ? 'checked' : ''} tabindex="-1" aria-hidden="true">
+                <div class="player-meta">
+                  <div class="player-name">${escapeHtml(p.name)}</div>
+                  <div class="gender">${escapeHtml(p.gender)}</div>
+                </div>
+              </button>
+            </div>
+            ${i === 0 ? '<div class="vs">VS</div>' : ''}
+          `).join('')}
+        </div>
+      `;
+    }
 
-            // 次のラウンドへ進出
-            currentRoundPlayers = [...nextRoundPlayers, ...selectedWinners];
-            nextRoundPlayers = [];
-            roundNumber++;
+    function renderBracket() {
+      if (!state.history.length && !state.currentMatches.length) {
+        bracketArea.innerHTML = '<div class="empty">対戦図は大会開始後にここへ表示されます。</div>';
+        return;
+      }
 
-            setupRound();
-        }
+      const rounds = [...state.history];
+      if (state.currentMatches.length) rounds.push({ round: state.round, matches: state.currentMatches, current: true });
 
-        // 全体トーナメント表のリアルタイム描画
-        function renderTree() {
-            const treeArea = document.getElementById('tournamentTree');
-            if (tournamentHistory.length === 0) {
-                treeArea.innerHTML = 'まだトーナメントが作られていません。';
-                return;
-            }
+      bracketArea.innerHTML = `<div class="bracket">
+        ${rounds.map(r => `
+          <section class="bracket-round">
+            <h4>${r.current ? '▶ ' : ''}第${r.round}ラウンド</h4>
+            ${r.matches.map(m => {
+              if (m.bye) {
+                const p = m.players[0];
+                return `<div class="bracket-match"><div class="line"><span>${escapeHtml(p.name)}</span><span class="win">不戦勝</span></div></div>`;
+              }
+              return `<div class="bracket-match">
+                ${m.players.map(p => `<div class="line"><span>${escapeHtml(p.name)}</span><span class="${m.winnerId === p.id ? 'win' : (!m.winnerId ? 'pending' : '')}">${m.winnerId === p.id ? '✓ 勝' : (!m.winnerId ? '対戦中' : '')}</span></div>`).join('')}
+              </div>`;
+            }).join('')}
+          </section>
+        `).join('')}
+      </div>`;
+    }
 
-            let html = '';
-            tournamentHistory.forEach((h) => {
-                html += `<div class="round-block"><div class="round-title">第 ${h.round} 回戦</div>`;
-                h.matches.forEach((m) => {
-                    if (m.isBye) {
-                        html += `<div class="tree-match"><span>${m.p1}</span> <span class="tree-winner">不戦勝 進出</span></div>`;
-                    } else {
-                        const winnerText = m.winner ? `➔ <span class="tree-winner">${m.winner} 勝</span>` : '（対戦中）';
-                        html += `<div class="tree-match"><span>${m.p1} vs ${m.p2}</span> <span>${winnerText}</span></div>`;
-                    }
-                });
-                html += `</div>`;
-            });
+    function resetTournament() {
+      if (!confirm('大会結果をすべて消して、最初からやり直しますか？')) return;
+      state = { players: [], round: 0, currentMatches: [], history: [], champion: null, running: false };
+      renderGame();
+      renderBracket();
+      rerollBtn.style.display = 'none';
+      save();
+    }
 
-            treeArea.innerHTML = html;
-        }
+    playerData.addEventListener('input', () => {
+      updateCounts();
+      renderPeoplePreview();
+      save();
+    });
+    pairMode.addEventListener('change', save);
+    $('startBtn').addEventListener('click', startTournament);
+    $('clearInputBtn').addEventListener('click', () => {
+      playerData.value = '';
+      updateCounts();
+      renderPeoplePreview();
+      save();
+    });
 
-        // リセット
-        function resetTournament() {
-            document.getElementById('matchArea').style.display = 'none';
-            document.getElementById('winnerArea').innerHTML = '';
-            document.getElementById('tournamentTree').innerHTML = 'まだトーナメントが作られていません。';
-            currentRoundPlayers = [];
-            nextRoundPlayers = [];
-            roundNumber = 1;
-            tournamentHistory = [];
-        }
-    </script>
+    // HTML onclick から呼ぶ関数を公開
+    window.selectWinner = selectWinner;
+    window.confirmRound = confirmRound;
+    window.rerollCurrentRound = rerollCurrentRound;
+    window.resetTournament = resetTournament;
 
+    // 初期復元
+    restore();
+  </script>
 </body>
 </html>
