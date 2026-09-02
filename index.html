@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>クラスの壁をなくす！ランダムグループ分けツール</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f9f9f9; color: #333; }
+        textarea { width: 100%; height: 150px; padding: 10px; font-size: 16px; box-sizing: border-box; }
+        input[type="number"] { padding: 5px; font-size: 16px; width: 80px; }
+        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        button:hover { background: #0056b3; }
+        .group-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .group-card h3 { margin-top: 0; color: #007bff; }
+        ul { margin: 0; padding-left: 20px; }
+        .note { font-size: 14px; color: #666; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>ランダムグループ分けツール</h1>
+    
+    <div class="note">
+        <p>下のボックスに <code>名前/男子</code> または <code>名前/女子</code> の形式で1行ずつ入力してください。</p>
+    </div>
+
+    <textarea id="inputData">佐藤健/男子
+鈴木花子/女子
+高橋航/男子
+田中美咲/女子
+伊藤蓮/男子
+渡辺葵/女子
+小林翔/1
+中村さくら/2</textarea>
+
+    <br>
+    <label>1グループの人数: <input type="number" id="groupSize" value="3" min="1"></label>
+    <br>
+    <button onclick="generateGroups()">グループを分ける</button>
+
+    <h2>結果</h2>
+    <div id="result"></div>
+
+    <script>
+        function generateGroups() {
+            const rawText = document.getElementById('inputData').value;
+            const groupSize = parseInt(document.getElementById('groupSize').value);
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '';
+
+            const lines = rawText.split('\n');
+            let members = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+                const parts = line.split('/');
+                if (parts.length >= 2) {
+                    members.push({ name: parts[0].trim(), gender: parts[1].trim() });
+                }
+            }
+
+            if (members.length === 0) {
+                resultDiv.innerHTML = '<p style="color:red;">有効なデータがありません。</p>';
+                return;
+            }
+
+            if (isNaN(groupSize) || groupSize <= 0) {
+                resultDiv.innerHTML = '<p style="color:red;">有効な人数を入力してください。</p>';
+                return;
+            }
+
+            // シャッフル（Fisher-Yatesアルゴリズム）
+            for (let i = members.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [members[i], members[j]] = [members[j], members[i]];
+            }
+
+            // グループに分割
+            let groups = [];
+            for (let i = 0; i < members.length; i += groupSize) {
+                groups.push(members.slice(i, i + groupSize));
+            }
+
+            // 画面に表示
+            groups.forEach((group, index) => {
+                let card = document.createElement('div');
+                card.className = 'group-card';
+                card.innerHTML = `<h3>第 ${index + 1} グループ</h3>`;
+                let ul = document.createElement('ul');
+                group.forEach(member => {
+                    let li = document.createElement('li');
+                    li.textContent = `${member.name} (${member.gender})`;
+                    ul.appendChild(li);
+                });
+                card.appendChild(ul);
+                resultDiv.appendChild(card);
+            });
+        }
+    </script>
+
+</body>
+</html>
