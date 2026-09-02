@@ -2,53 +2,101 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>じゃんけん大会 トーナメントツール</title>
+    <title>じゃんけん大会 トーナメントツール（確定ボタン式）</title>
     <style>
-        body { font-family: sans-serif; max-width: 900px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
-        h1, h2, h3 { color: #2c3e50; }
+        body { font-family: sans-serif; max-width: 850px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
+        h1 { color: #2c3e50; font-size: 24px; }
         .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
         textarea { width: 100%; height: 120px; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        .controls { display: flex; gap: 15px; margin-top: 15px; }
+        .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 15px; }
         button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
         .reset-btn { background: #dc3545; }
         .reset-btn:hover { background: #bd2130; }
-        .match-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
-        .player { font-size: 18px; font-weight: bold; width: 35%; text-align: center; }
-        .vs { font-size: 14px; color: #888; }
-        .win-btn { padding: 6px 12px; font-size: 14px; background: #28a745; margin-left: 5px; }
-        .win-btn:hover { background: #218838; }
+        .confirm-btn { background: #28a745; width: 100%; margin-top: 15px; padding: 12px; font-weight: bold; font-size: 18px; }
+        .confirm-btn:hover { background: #218838; }
+        .note { font-size: 13px; color: #666; margin-top: 5px; }
+        
+        /* 対戦入力カード */
+        .match-card { background: #fff; border: 1px solid #ddd; padding: 15px; margin-bottom: 12px; border-radius: 6px; display: flex; justify-content: space-around; align-items: center; }
+        .player-option { font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .player-option input { transform: scale(1.4); cursor: pointer; }
+        .vs { font-size: 14px; color: #888; font-weight: bold; }
+        
+        /* トーナメント表表示 */
+        .tournament-tree { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 15px; margin-top: 15px; }
+        .round-block { margin-bottom: 15px; }
+        .round-title { font-weight: bold; color: #007bff; border-bottom: 2px solid #007bff; padding-bottom: 4px; margin-bottom: 8px; }
+        .tree-match { font-size: 14px; background: white; padding: 6px 10px; margin: 4px 0; border-radius: 4px; border-left: 3px solid #ccc; display: flex; justify-content: space-between; }
+        .tree-winner { font-weight: bold; color: #28a745; }
         .winner-box { font-size: 24px; color: #d9534f; text-align: center; font-weight: bold; padding: 20px; background: #fff3cd; border-radius: 8px; border: 1px solid #ffeeba; }
     </style>
 </head>
 <body>
 
-    <h1>✊✌️✋ じゃんけん大会ツール</h1>
+    <h1>✊✌️✋ じゃんけん大会 トーナメントツール</h1>
 
     <div class="box">
         <label><b>参加者一覧（1行に1名）</b></label>
-        <textarea id="playerData" placeholder="名前を入力">佐藤
-鈴木
-高橋
-田中
-伊藤
-渡辺
-小林</textarea>
+        <textarea id="playerData" placeholder="名前を入力">佐藤健
+鈴木花子
+高橋航
+田中美咲
+伊藤蓮
+渡辺葵
+小林翔
+中村さくら</textarea>
+        <div class="note">※入力内容は自動でブラウザに保存されます。</div>
+
         <div class="controls">
             <button onclick="startTournament()">トーナメントを作成</button>
             <button class="reset-btn" onclick="resetTournament()">リセット</button>
         </div>
     </div>
 
-    <div id="tournamentArea"></div>
+    <!-- 勝敗選択エリア -->
+    <div id="matchArea" class="box" style="display:none;">
+        <h2 id="currentRoundTitle"></h2>
+        <div id="matchesContainer"></div>
+        <button class="confirm-btn" onclick="confirmWinners()">勝者を確定して次の対戦へ ➔</button>
+    </div>
+
+    <!-- 優勝表示 -->
+    <div id="winnerArea"></div>
+
+    <!-- 全体トーナメント表 -->
+    <div class="box">
+        <h2>📊 トーナメント表・進行状況</h2>
+        <div id="tournamentTree" class="tournament-tree">まだトーナメントが作られていません。</div>
+    </div>
 
     <script>
+        const playerData = document.getElementById('playerData');
         let currentRoundPlayers = [];
         let nextRoundPlayers = [];
         let roundNumber = 1;
+        let tournamentHistory = []; // 全体表用の履歴データ
 
+        // 自動保存・復元
+        if (localStorage.getItem('savedJankenPlayers')) {
+            playerData.value = localStorage.getItem('savedJankenPlayers');
+        }
+        playerData.addEventListener('input', () => {
+            localStorage.setItem('savedJankenPlayers', playerData.value);
+        });
+
+        // シャッフル関数
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // トーナメント開始
         function startTournament() {
-            const rawText = document.getElementById('playerData').value;
+            const rawText = playerData.value;
             let players = rawText.split('\n').map(p => p.trim()).filter(p => p.length > 0);
 
             if (players.length < 2) {
@@ -56,81 +104,128 @@
                 return;
             }
 
-            // シャッフル
-            for (let i = players.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [players[i], players[j]] = [players[j], players[i]];
-            }
-
-            currentRoundPlayers = players;
+            currentRoundPlayers = shuffle([...players]);
             nextRoundPlayers = [];
             roundNumber = 1;
+            tournamentHistory = [];
 
-            renderRound();
+            document.getElementById('winnerArea').innerHTML = '';
+            document.getElementById('matchArea').style.display = 'block';
+
+            setupRound();
         }
 
-        function renderRound() {
-            const area = document.getElementById('tournamentArea');
-            area.innerHTML = '';
+        // ラウンドの準備と描画
+        function setupRound() {
+            const container = document.getElementById('matchesContainer');
+            container.innerHTML = '';
 
+            // 優勝決定
             if (currentRoundPlayers.length === 1) {
-                area.innerHTML = `<div class="winner-box">🏆 優勝：${currentRoundPlayers[0]} 選手！ 🏆</div>`;
+                document.getElementById('matchArea').style.display = 'none';
+                document.getElementById('winnerArea').innerHTML = `<div class="winner-box">🏆 優勝：${currentRoundPlayers[0]} 選手！ 🏆</div>`;
+                renderTree();
                 return;
             }
 
-            let html = `<h2>第 ${roundNumber} 回戦</h2>`;
-            let matchesCount = Math.floor(currentRoundPlayers.length / 2);
+            document.getElementById('currentRoundTitle').innerText = `第 ${roundNumber} 回戦`;
 
-            // 不戦勝の処理
-            if (currentRoundPlayers.length % 2 !== 0) {
-                const byePlayer = currentRoundPlayers.pop();
+            let roundMatches = [];
+            let playersCopy = [...currentRoundPlayers];
+
+            // 不戦勝処理
+            if (playersCopy.length % 2 !== 0) {
+                const byePlayer = playersCopy.pop();
                 nextRoundPlayers.push(byePlayer);
-                html += `<p style="color:#666;">※ ${byePlayer} 選手は不戦勝で次のラウンドへ進出</p>`;
+                roundMatches.push({ p1: byePlayer, p2: '（不戦勝）', winner: byePlayer, isBye: true });
             }
 
-            area.innerHTML = html;
+            // 対戦ペアの描画
+            for (let i = 0; i < playersCopy.length; i += 2) {
+                const p1 = playersCopy[i];
+                const p2 = playersCopy[i + 1];
+                const matchName = `match_${i}`;
 
-            for (let i = 0; i < currentRoundPlayers.length; i += 2) {
-                const p1 = currentRoundPlayers[i];
-                const p2 = currentRoundPlayers[i + 1];
-                const matchId = `match_${i}`;
+                roundMatches.push({ p1, p2, winner: null, isBye: false, name: matchName });
 
                 const matchDiv = document.createElement('div');
                 matchDiv.className = 'match-card';
-                matchDiv.id = matchId;
                 matchDiv.innerHTML = `
-                    <div class="player">${p1} <button class="win-btn" onclick="recordWin('${p1}', '${matchId}')">勝利</button></div>
+                    <label class="player-option">
+                        <input type="radio" name="${matchName}" value="${p1}"> ${p1}
+                    </label>
                     <div class="vs">VS</div>
-                    <div class="player">${p2} <button class="win-btn" onclick="recordWin('${p2}', '${matchId}')">勝利</button></div>
+                    <label class="player-option">
+                        <input type="radio" name="${matchName}" value="${p2}"> ${p2}
+                    </label>
                 `;
-                area.appendChild(matchDiv);
+                container.appendChild(matchDiv);
             }
+
+            tournamentHistory.push({ round: roundNumber, matches: roundMatches });
+            renderTree();
         }
 
-        function recordWin(winner, matchId) {
-            nextRoundPlayers.push(winner);
-            const card = document.getElementById(matchId);
-            card.style.opacity = '0.4';
-            card.querySelectorAll('button').forEach(btn => btn.disabled = true);
+        // 確定ボタンを押したときの処理
+        function confirmWinners() {
+            const currentHistory = tournamentHistory[tournamentHistory.length - 1];
+            let activeMatches = currentHistory.matches.filter(m => !m.isBye);
+            let selectedWinners = [];
 
-            // 全試合終了したら次のラウンドへ
-            const totalMatchesInRound = Math.floor(currentRoundPlayers.length / 2);
-            const completedMatches = card.parentNode.querySelectorAll('.match-card[style*="opacity"]').length;
-
-            if (completedMatches === totalMatchesInRound) {
-                currentRoundPlayers = [...nextRoundPlayers];
-                nextRoundPlayers = [];
-                roundNumber++;
-                setTimeout(renderRound, 800);
+            for (let match of activeMatches) {
+                const checked = document.querySelector(`input[name="${match.name}"]:checked`);
+                if (!checked) {
+                    alert('全ての試合の勝者を選択してください！');
+                    return;
+                }
+                match.winner = checked.value;
+                selectedWinners.push(checked.value);
             }
+
+            // 次のラウンドへ進出
+            currentRoundPlayers = [...nextRoundPlayers, ...selectedWinners];
+            nextRoundPlayers = [];
+            roundNumber++;
+
+            setupRound();
         }
 
+        // 全体トーナメント表のリアルタイム描画
+        function renderTree() {
+            const treeArea = document.getElementById('tournamentTree');
+            if (tournamentHistory.length === 0) {
+                treeArea.innerHTML = 'まだトーナメントが作られていません。';
+                return;
+            }
+
+            let html = '';
+            tournamentHistory.forEach((h) => {
+                html += `<div class="round-block"><div class="round-title">第 ${h.round} 回戦</div>`;
+                h.matches.forEach((m) => {
+                    if (m.isBye) {
+                        html += `<div class="tree-match"><span>${m.p1}</span> <span class="tree-winner">不戦勝 進出</span></div>`;
+                    } else {
+                        const winnerText = m.winner ? `➔ <span class="tree-winner">${m.winner} 勝</span>` : '（対戦中）';
+                        html += `<div class="tree-match"><span>${m.p1} vs ${m.p2}</span> <span>${winnerText}</span></div>`;
+                    }
+                });
+                html += `</div>`;
+            });
+
+            treeArea.innerHTML = html;
+        }
+
+        // リセット
         function resetTournament() {
-            document.getElementById('tournamentArea').innerHTML = '';
+            document.getElementById('matchArea').style.display = 'none';
+            document.getElementById('winnerArea').innerHTML = '';
+            document.getElementById('tournamentTree').innerHTML = 'まだトーナメントが作られていません。';
             currentRoundPlayers = [];
             nextRoundPlayers = [];
             roundNumber = 1;
+            tournamentHistory = [];
         }
     </script>
+
 </body>
 </html>
