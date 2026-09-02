@@ -24,8 +24,14 @@
 <div class="grid">
 <div>
 <label for="participants">参加者</label>
-<textarea id="participants" placeholder="例：\n田中 / 男子\n佐藤 / 女子\n鈴木 / 男子\n山田 / 女子\n高橋 / 男子\n伊藤 / 女子"></textarea>
-<p class="hint">「名前 / 男子」「名前 / 女子」の形式で入力してください。区切りには「/」「,」「、」「|」も使えます。重複した名前は登録できません。</p>
+<textarea id="participants" placeholder="例：
+田中 男子
+佐藤 女子
+鈴木 男子
+山田 女子
+高橋 男子
+伊藤 女子"></textarea>
+<p class="hint">名前と性別をスペースで区切って、1行ずつ入力してください。半角スペース・全角スペースのどちらでも使えます。</p>
 </div>
 <div class="settings">
 <div><label for="shuffleMode">対戦の組み方</label><select id="shuffleMode"><option value="random">ランダムに組む</option><option value="input">入力順をできるだけ維持</option><option value="mixedGender">男女をできるだけ混ぜる</option></select></div>
@@ -84,10 +90,10 @@ const lines=participants.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
 if(lines.length<2)throw new Error('2人以上の参加者を入力してください。');
 const seen=new Set();const people=[];
 for(const line of lines){
-let parts=line.split(/\s*[\/,:、|]\s*/).filter(Boolean);
-if(parts.length<2)parts=line.match(/^(.*?)\s+(男子|女子|男|女|M|m|F|f)$/i)?.slice(1)||[];
-if(parts.length<2)throw new Error(`入力を確認してください：「${line}」`);
-const name=parts.slice(0,-1).join(' ').trim();const gender=normalizeGender(parts.at(-1));
+const parts=line.split(/\s+/).filter(Boolean);
+if(parts.length<2)throw new Error(`名前と性別をスペースで区切ってください：「${line}」`);
+const gender=normalizeGender(parts.at(-1));
+const name=parts.slice(0,-1).join(' ').trim();
 if(!name||!gender)throw new Error(`名前と性別を確認してください：「${line}」`);
 if(seen.has(name))throw new Error(`同じ名前が複数あります：「${name}」`);seen.add(name);
 people.push({id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,name,gender});
