@@ -2,64 +2,120 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title></title>ランダムグループ分けツール</title>
+    <title>ランダムグループ分けツール</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f9f9f9; color: #333; }
-        textarea { width: 100%; height: 150px; padding: 10px; font-size: 16px; box-sizing: border-box; }
-        input[type="number"] { padding: 5px; font-size: 16px; width: 80px; }
-        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; padding: 20px; background: #f4f6f9; color: #333; }
+        h1 { color: #2c3e50; font-size: 24px; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        textarea { width: 100%; height: 150px; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+        .drop-zone { border: 2px dashed #007bff; padding: 15px; text-align: center; background: #f0f8ff; border-radius: 4px; margin-bottom: 10px; color: #007bff; font-weight: bold; }
+        .controls { display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 15px; }
+        input[type="number"] { padding: 8px; font-size: 16px; width: 80px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; font-size: 16px; background: #007bff; color: white; border: none; cursor: pointer; border-radius: 4px; }
         button:hover { background: #0056b3; }
+        .secondary-btn { background: #6c757d; }
+        .secondary-btn:hover { background: #5a6268; }
         .group-card { background: white; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .group-card h3 { margin-top: 0; color: #007bff; }
+        .group-card h3 { margin-top: 0; color: #007bff; display: flex; justify-content: space-between; align-items: center; }
         ul { margin: 0; padding-left: 20px; }
-        .note { font-size: 14px; color: #666; margin-bottom: 10px; }
+        .note { font-size: 13px; color: #666; margin-top: 5px; }
+        .boy { color: #0056b3; }
+        .girl { color: #c82333; }
     </style>
 </head>
 <body>
 
-    <h1>ランダムグループ分けツール</h1>
+    <h1>ランダムグループ分けツール（完全版）</h1>
     
-    <div class="note">
-        <p>下のボックスに <code>名前/男子</code> または <code>名前/女子</code> の形式で1行ずつ入力してください。</p>
-    </div>
-
-    <textarea id="inputData">佐藤健/男子
+    <div class="box">
+        <div class="drop-zone" id="dropZone">
+            📁 ここに .txt ファイルをドラッグ＆ドロップ、または下のテキストを編集
+        </div>
+        <textarea id="inputData" placeholder="名前/男子 または 名前/女子 の形式で入力">佐藤健/男子
 鈴木花子/女子
 高橋航/男子
 田中美咲/女子
 伊藤蓮/男子
 渡辺葵/女子
-小林翔/1
-中村さくら/2</textarea>
+小林翔/男子
+中村さくら/女子</textarea>
+        <div class="note">※入力内容は自動でブラウザに保存されます。</div>
 
-    <br>
-    <label>1グループの人数: <input type="number" id="groupSize" value="3" min="1"></label>
-    <br>
-    <button onclick="generateGroups()">グループを分ける</button>
+        <div class="controls">
+            <label>1グループの人数: <input type="number" id="groupSize" value="3" min="1"></label>
+            <label><input type="checkbox" id="balanceGender" checked> 男女比を均等にする</label>
+            <button onclick="generateGroups()">グループを分ける</button>
+            <button class="secondary-btn" onclick="copyResults()">結果をコピー</button>
+        </div>
+    </div>
 
     <h2>結果</h2>
     <div id="result"></div>
 
     <script>
+        const inputData = document.getElementById('inputData');
+        const dropZone = document.getElementById('dropZone');
+
+        // 起動時にローカルストレージから復元
+        if (localStorage.getItem('savedMembers')) {
+            inputData.value = localStorage.getItem('savedMembers');
+        }
+
+        // 入力変更時に自動保存
+        inputData.addEventListener('input', () => {
+            localStorage.setItem('savedMembers', inputData.value);
+        });
+
+        // ドラッグ＆ドロップファイル読込
+        dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.background = '#e2e8f0'; });
+        dropZone.addEventListener('dragleave', () => { dropZone.style.background = '#f0f8ff'; });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.background = '#f0f8ff';
+            const file = e.dataTransfer.files[0];
+            if (file && file.name.endsWith('.txt')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    inputData.value = event.target.result;
+                    localStorage.setItem('savedMembers', inputData.value);
+                    alert('ファイルを読み込みました！');
+                };
+                reader.readAsText(file);
+            } else {
+                alert('.txtファイルをドロップしてください。');
+            }
+        });
+
         function generateGroups() {
-            const rawText = document.getElementById('inputData').value;
+            const rawText = inputData.value;
             const groupSize = parseInt(document.getElementById('groupSize').value);
+            const balanceGender = document.getElementById('balanceGender').checked;
             const resultDiv = document.getElementById('result');
             resultDiv.innerHTML = '';
 
             const lines = rawText.split('\n');
-            let members = [];
+            let boys = [];
+            let girls = [];
 
             for (let line of lines) {
                 line = line.trim();
                 if (!line) continue;
                 const parts = line.split('/');
                 if (parts.length >= 2) {
-                    members.push({ name: parts[0].trim(), gender: parts[1].trim() });
+                    const name = parts[0].trim();
+                    const gender = parts[1].trim();
+                    if (gender === '男子') {
+                        boys.push({ name, gender });
+                    } else if (gender === '女子') {
+                        girls.push({ name, gender });
+                    } else {
+                        // 男子・女子以外の場合は男子扱いまたはその他として処理
+                        boys.push({ name, gender });
+                    }
                 }
             }
 
-            if (members.length === 0) {
+            if (boys.length === 0 && girls.length === 0) {
                 resultDiv.innerHTML = '<p style="color:red;">有効なデータがありません。</p>';
                 return;
             }
@@ -69,31 +125,77 @@
                 return;
             }
 
-            // シャッフル（Fisher-Yatesアルゴリズム）
-            for (let i = members.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [members[i], members[j]] = [members[j], members[i]];
+            // シャッフル関数
+            function shuffle(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
             }
 
-            // グループに分割
             let groups = [];
-            for (let i = 0; i < members.length; i += groupSize) {
-                groups.push(members.slice(i, i + groupSize));
+
+            if (balanceGender) {
+                shuffle(boys);
+                shuffle(girls);
+                
+                // 全体のグループ数を算出
+                const totalMembers = boys.length + girls.length;
+                const numGroups = Math.ceil(totalMembers / groupSize);
+                
+                for (let i = 0; i < numGroups; i++) {
+                    groups.push([]);
+                }
+
+                // 男子を均等配分
+                boys.forEach((boy, idx) => {
+                    groups[idx % numGroups].push(boy);
+                });
+                // 女子を均等配分
+                girls.forEach((girl, idx) => {
+                    groups[idx % numGroups].push(girl);
+                });
+
+                // 各グループ内もランダム順に並び替え
+                groups.forEach(group => shuffle(group));
+
+            } else {
+                let allMembers = shuffle([...boys, ...girls]);
+                for (let i = 0; i < allMembers.length; i += groupSize) {
+                    groups.push(allMembers.slice(i, i + groupSize));
+                }
             }
 
-            // 画面に表示
+            // 画面表示
             groups.forEach((group, index) => {
                 let card = document.createElement('div');
                 card.className = 'group-card';
-                card.innerHTML = `<h3>第 ${index + 1} グループ</h3>`;
+                card.innerHTML = `<h3>第 ${index + 1} グループ <span style="font-size:12px; font-weight:normal; color:#666;">(${group.length}人)</span></h3>`;
                 let ul = document.createElement('ul');
                 group.forEach(member => {
                     let li = document.createElement('li');
-                    li.textContent = `${member.name} (${member.gender})`;
+                    let cssClass = member.gender === '男子' ? 'boy' : (member.gender === '女子' ? 'girl' : '');
+                    li.innerHTML = `<span class="${cssClass}">${member.name} (${member.gender})</span>`;
                     ul.appendChild(li);
                 });
                 card.appendChild(ul);
                 resultDiv.appendChild(card);
+            });
+        }
+
+        function copyResults() {
+            const cards = document.querySelectorAll('.group-card');
+            if (cards.length === 0) {
+                alert('コピーする結果がありません。');
+                return;
+            }
+            let textToCopy = '';
+            cards.forEach(card => {
+                textToCopy += card.innerText + '\n\n';
+            });
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('グループ分けの結果をクリップボードにコピーしました！');
             });
         }
     </script>
