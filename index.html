@@ -2,190 +2,48 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#111827">
 <title>じゃんけん大会 運営ツール</title>
 <style>
-:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6;--primary:#111827;--line:#d1d5db;--muted:#6b7280;--card:#fff;--soft:#f9fafb;--success:#166534;--success-bg:#dcfce7;--danger:#991b1b;--danger-bg:#fee2e2;--focus:#6366f1}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0}.app{max-width:1180px;margin:auto;padding:24px 16px 56px}header{margin-bottom:20px}h1{margin:0;font-size:clamp(28px,5vw,42px);letter-spacing:-.03em}header p{margin:8px 0 0;color:var(--muted)}h2,h3{margin-top:0}.card{background:var(--card);border:1px solid #e5e7eb;border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 6px 24px #1118270a}.grid{display:grid;grid-template-columns:1.45fr .85fr;gap:18px}@media(max-width:780px){.grid{grid-template-columns:1fr}}label{display:block;font-weight:700;margin-bottom:8px}textarea{width:100%;min-height:280px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:14px;font:inherit;line-height:1.6;outline:none;background:#fff}textarea:focus,input:focus,select:focus{border-color:var(--focus);box-shadow:0 0 0 3px #6366f122}.settings{display:grid;gap:14px;align-content:start}input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit}.hint{font-size:13px;color:var(--muted);margin:7px 0 0}.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden}.seg button{border:0;border-radius:0;background:#fff;color:#374151}.seg button.active{background:var(--primary);color:#fff}.actions,.results-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}button{border:0;border-radius:11px;padding:11px 16px;font:inherit;font-weight:700;cursor:pointer;background:var(--primary);color:#fff}button.secondary{background:#e5e7eb;color:#111827}button.ghost{background:#fff;color:#111827;border:1px solid var(--line)}button.danger{background:var(--danger-bg);color:var(--danger)}button.success{background:var(--success);color:#fff}button:disabled{opacity:.45;cursor:not-allowed}.notice{padding:12px 14px;border-radius:12px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;margin-top:12px;font-size:14px;display:none}.summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.pill{padding:7px 10px;border-radius:999px;background:#f3f4f6;font-size:13px;font-weight:700}.step{display:flex;align-items:center;gap:10px;margin-bottom:16px}.step-number{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--primary);color:#fff;font-weight:800}.step p{margin:0;color:var(--muted);font-size:13px}.mode-note{padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;background:var(--soft);font-size:14px;color:#374151}.table-switch{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}.round-status{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:14px;border:1px solid #e5e7eb;border-radius:14px;background:var(--soft)}.round-status strong{font-size:16px}.round-status .small{margin-top:3px}.table-wrap{overflow:auto;border:1px solid #e5e7eb;border-radius:14px;background:var(--soft);padding:16px}.bracket{display:flex;gap:34px;min-width:max-content;align-items:stretch}.round-col{display:flex;flex-direction:column;min-width:250px}.round-title{font-weight:800;text-align:center;margin-bottom:12px}.matches{display:flex;flex:1;flex-direction:column;justify-content:space-around;gap:18px}.match{background:#fff;border:1px solid var(--line);border-radius:12px;position:relative;box-shadow:0 3px 12px #11182708}.match-row{display:flex;align-items:center;min-height:48px;border-bottom:1px solid #e5e7eb;padding:8px 10px;gap:8px}.match-row:last-child{border-bottom:0}.player-name{flex:1;min-width:0;word-break:break-word}.gender-tag{font-size:11px;padding:3px 6px;border-radius:999px;background:#f3f4f6;color:#4b5563;font-weight:800;white-space:nowrap}.winner-tag{font-size:11px;padding:3px 6px;border-radius:999px;background:var(--success-bg);color:var(--success);font-weight:800;white-space:nowrap}.match-actions{padding:8px 10px;background:#f9fafb;display:grid;grid-template-columns:1fr 1fr;gap:6px;border-top:1px solid #e5e7eb}.match-actions button{padding:8px 7px;font-size:13px}.match-actions button.selected{background:#166534;color:#fff}.match.bye{border-style:dashed}.match.bye .match-actions{display:none}.cards-view{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.cards-view .round-section{border:1px solid #e5e7eb;border-radius:14px;background:var(--soft);padding:12px}.round-section h3{font-size:16px;margin-bottom:10px}.empty{text-align:center;color:#9ca3af;padding:28px}.champion{text-align:center;padding:24px;border:2px solid #111827;border-radius:18px;background:#fff;margin-top:16px}.champion-title{font-size:14px;font-weight:800;color:var(--muted);margin-bottom:6px}.champion-name{font-size:32px;font-weight:900;word-break:break-word}.champion-gender{display:inline-block;margin-top:8px;padding:4px 8px;border-radius:999px;background:#f3f4f6;color:#4b5563;font-size:12px;font-weight:800}.history{display:grid;gap:10px}.history-round{border:1px solid #e5e7eb;border-radius:12px;padding:12px;background:var(--soft)}.history-round strong{display:block;margin-bottom:8px}.result-row{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-top:1px solid #e5e7eb}.result-row:first-child{border-top:0}.small{font-size:13px;color:var(--muted)}
-@media(max-width:600px){.card{padding:16px}.app{padding:18px 12px 40px}.bracket{gap:18px}.round-col{min-width:210px}.champion-name{font-size:26px}.round-status{align-items:flex-start}}
-@media print{body{background:#fff}.setup-card,.results-actions,.table-switch,.round-status,.notice,header p{display:none!important}.app{max-width:none;padding:0}.card{border:0;box-shadow:none;padding:0}.table-wrap{border:0;padding:0}.bracket{gap:20px}.match-actions{display:none}}
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#111827;background:#f3f4f6;--p:#111827;--line:#e5e7eb;--muted:#6b7280;--soft:#f9fafb;--ok:#166534;--okbg:#dcfce7;--danger:#991b1b;--dangerbg:#fee2e2}
+*{box-sizing:border-box}body{margin:0}.app{max-width:1080px;margin:auto;padding:18px 14px 40px}header{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:14px}h1{font-size:24px;margin:0;letter-spacing:-.03em}header p{margin:3px 0 0;color:var(--muted);font-size:12px}.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}.grid{display:grid;grid-template-columns:1.5fr 1fr;gap:14px}@media(max-width:700px){.grid{grid-template-columns:1fr}}label{display:block;font-size:13px;font-weight:800;margin-bottom:6px}textarea,input,select{width:100%;font:inherit;border:1px solid #d1d5db;border-radius:9px;background:#fff}textarea{height:210px;resize:vertical;padding:10px;line-height:1.45}input,select{padding:8px 10px}.hint,.small{font-size:12px;color:var(--muted)}.hint{margin:5px 0 0}.settings{display:grid;gap:10px;align-content:start}.seg{display:grid;grid-template-columns:1fr 1fr;border:1px solid #d1d5db;border-radius:9px;overflow:hidden}.seg button{border:0;border-radius:0;background:#fff;color:#374151;padding:8px;font-size:12px}.seg button.active{background:var(--p);color:#fff}.actions,.toolbar{display:flex;gap:7px;flex-wrap:wrap}button{border:0;border-radius:9px;padding:8px 12px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;background:var(--p);color:#fff}button.secondary{background:#e5e7eb;color:#111827}button.ghost{background:#fff;color:#111827;border:1px solid #d1d5db}button.danger{background:var(--dangerbg);color:var(--danger)}button.success{background:var(--ok);color:#fff}button:disabled{opacity:.45;cursor:not-allowed}.notice{display:none;padding:9px 11px;border-radius:9px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}.section-head h2{font-size:17px;margin:0}.summary{display:flex;gap:6px;flex-wrap:wrap}.pill{font-size:11px;font-weight:800;background:#f3f4f6;border-radius:999px;padding:5px 8px}.round-status{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--soft);margin-bottom:10px}.round-status strong{font-size:14px}.progress{font-size:12px;color:var(--muted)}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:11px;background:var(--soft);padding:10px}.bracket{display:flex;gap:18px;min-width:max-content}.round-col{width:210px;display:flex;flex-direction:column}.round-title{text-align:center;font-weight:800;font-size:12px;margin-bottom:8px}.matches{display:flex;flex-direction:column;justify-content:space-around;gap:9px;flex:1}.match{background:#fff;border:1px solid #d1d5db;border-radius:9px;overflow:hidden}.match-row{display:flex;align-items:center;gap:6px;min-height:36px;padding:6px 8px;border-bottom:1px solid var(--line)}.match-row:last-child{border-bottom:0}.player-name{flex:1;min-width:0;word-break:break-word;font-size:12px}.gender-tag,.winner-tag{font-size:9px;padding:2px 5px;border-radius:999px;white-space:nowrap;font-weight:800;background:#f3f4f6;color:#4b5563}.winner-tag{background:var(--okbg);color:var(--ok)}.match-actions{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px;border-top:1px solid var(--line);background:var(--soft)}.match-actions button{font-size:10px;padding:6px 4px}.match-actions button.selected{background:var(--ok)}.match.bye{border-style:dashed}.cards-view{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:8px}.round-section{border:1px solid var(--line);border-radius:10px;background:var(--soft);padding:9px}.round-section h3{font-size:13px;margin:0 0 7px}.history{display:grid;gap:7px}.history-round{border:1px solid var(--line);border-radius:9px;padding:9px;background:var(--soft)}.history-round strong{font-size:12px}.result-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;border-top:1px solid var(--line);font-size:11px}.result-row:first-child{border-top:0;margin-top:5px}.champion{text-align:center;border:1px solid #111827;border-radius:11px;padding:14px;margin-top:10px}.champion-title{font-size:11px;color:var(--muted);font-weight:800}.champion-name{font-size:24px;font-weight:900}.champion-gender{font-size:10px;color:var(--muted)}
+@media(max-width:600px){header{align-items:start;flex-direction:column;gap:4px}.app{padding:14px 10px 30px}.round-status{align-items:flex-start;flex-direction:column}}
+@media print{.setup-card,.toolbar,.round-status,.results-actions,header p{display:none!important}.app{max-width:none;padding:0}.card{border:0;box-shadow:none;padding:0}.table-wrap{border:0;padding:0}.match-actions{display:none}}
 </style>
 </head>
 <body>
 <div class="app">
-<header>
-<h1>じゃんけん大会 運営ツール</h1>
-<p>参加者を登録して、対戦表の作成から結果の記録までまとめて管理できます。</p>
-</header>
-
-<section class="card setup-card" id="setupCard">
-<div class="step"><div class="step-number">1</div><div><h2 style="margin:0">参加者登録</h2><p>1行につき1人。名前と性別を入力してください。</p></div></div>
-<div class="grid">
-<div>
-<label for="participants">参加者</label>
-<textarea id="participants" placeholder="例：
-田中 男子
+<header><div><h1>じゃんけん大会 運営ツール</h1><p>全員で一斉にじゃんけんして、ラウンドごとに結果をまとめて確定。</p></div></header>
+<section class="card setup-card">
+<div class="section-head"><h2>参加者登録</h2><span class="small">名前と性別を1行ずつ</span></div>
+<div class="grid"><div><label for="participants">参加者</label><textarea id="participants" placeholder="田中 男子
 佐藤 女子
 鈴木 男子
-山田 女子
-高橋 男子
-伊藤 女子"></textarea>
-<p class="hint">名前と性別をスペースで区切って、1行ずつ入力してください。半角スペース・全角スペースのどちらでも使えます。</p>
-</div>
-<div class="settings">
-<div><label for="shuffleMode">対戦の組み方</label><select id="shuffleMode"><option value="random">ランダムに組む</option><option value="input">入力順をできるだけ維持</option><option value="mixedGender">男女をできるだけ混ぜる</option></select></div>
-<div><label for="displayMode">対戦表の表示</label><div class="seg"><button id="bracketBtn" class="active" type="button">トーナメント表</button><button id="cardsBtn" type="button">カード形式</button></div></div>
-<div class="mode-note">全員が同じラウンドを一斉にじゃんけんし、終わったら勝者をまとめて確定できます。性別は参加者の確認と組み合わせの参考に使います。</div>
-<div class="actions"><button id="startBtn" type="button">大会を開始</button><button id="clearBtn" class="secondary" type="button">入力をクリア</button></div>
-<div id="notice" class="notice"></div>
-</div>
-</div>
+山田 女子"></textarea><p class="hint">半角・全角スペースのどちらでも区切れます。</p></div>
+<div class="settings"><div><label for="shuffleMode">対戦の組み方</label><select id="shuffleMode"><option value="random">ランダム</option><option value="input">入力順を維持</option><option value="mixedGender">男女をできるだけ混ぜる</option></select></div><div><label>表示</label><div class="seg"><button id="bracketBtn" class="active" type="button">トーナメント</button><button id="cardsBtn" type="button">カード</button></div></div><div class="actions"><button id="startBtn" type="button">大会を開始</button><button id="clearBtn" class="secondary" type="button">入力をクリア</button></div><div id="notice" class="notice"></div></div></div>
 </section>
-
-<section class="card" id="tournamentCard" style="display:none">
-<div class="step"><div class="step-number">2</div><div><h2 style="margin:0">大会運営</h2><p>全員が同じラウンドでじゃんけんし、結果をまとめて確定します。</p></div></div>
-<div class="summary" id="summary"></div>
-<div class="table-switch">
-<button id="viewBracket" class="active" type="button">トーナメント表</button>
-<button id="viewCards" class="secondary" type="button">カード形式</button>
-<button id="resetTournament" class="danger" type="button">大会を最初からやり直す</button>
-</div>
-<div id="tournamentView"></div>
-</section>
-
-<section class="card" id="historyCard" style="display:none">
-<h2>対戦結果</h2>
-<div id="history" class="history"></div>
-<div id="championArea"></div>
-<div class="results-actions"><button id="copyBtn" class="secondary" type="button">結果をコピー</button><button id="printBtn" class="ghost" type="button">印刷</button></div>
-</section>
+<section class="card" id="tournamentCard" style="display:none"><div class="section-head"><h2>大会運営</h2><div id="summary" class="summary"></div></div><div class="toolbar" style="margin-bottom:9px"><button id="viewBracket" class="active" type="button">トーナメント</button><button id="viewCards" class="secondary" type="button">カード</button><button id="resetTournament" class="danger" type="button">最初から</button></div><div id="tournamentView"></div></section>
+<section class="card" id="historyCard" style="display:none"><div class="section-head"><h2>対戦結果</h2><div class="results-actions"><button id="copyBtn" class="secondary" type="button">結果をコピー</button><button id="printBtn" class="ghost" type="button">印刷</button></div></div><div id="history" class="history"></div><div id="championArea"></div></section>
 </div>
 <script>
-const $=id=>document.getElementById(id);
-const participants=$('participants'),notice=$('notice');
-let displayMode='bracket';
-let tournament=null;
-const STORAGE_KEY='jankenTournamentStateV2';
-const INPUT_KEY='jankenParticipantsV2';
-
-const savedInput=localStorage.getItem(INPUT_KEY);if(savedInput)participants.value=savedInput;
-participants.addEventListener('input',()=>localStorage.setItem(INPUT_KEY,participants.value));
-$('bracketBtn').onclick=()=>setDisplayMode('bracket');
-$('cardsBtn').onclick=()=>setDisplayMode('cards');
-$('viewBracket').onclick=()=>setTournamentView('bracket');
-$('viewCards').onclick=()=>setTournamentView('cards');
-$('startBtn').onclick=startTournament;
-$('clearBtn').onclick=()=>{participants.value='';localStorage.removeItem(INPUT_KEY);participants.focus()};
-$('resetTournament').onclick=()=>{if(confirm('大会を最初からやり直しますか？現在の結果は削除されます。')){tournament=null;localStorage.removeItem(STORAGE_KEY);$('tournamentCard').style.display='none';$('historyCard').style.display='none';window.scrollTo({top:0,behavior:'smooth'})}};
-$('copyBtn').onclick=copyResults;
-$('printBtn').onclick=()=>window.print();
-
-function setDisplayMode(mode){displayMode=mode;$('bracketBtn').classList.toggle('active',mode==='bracket');$('cardsBtn').classList.toggle('active',mode==='cards');if(tournament)syncViewButtons()}
-function setTournamentView(mode){displayMode=mode;syncViewButtons();renderTournament()}
-function syncViewButtons(){$('viewBracket').classList.toggle('active',displayMode==='bracket');$('viewBracket').classList.toggle('secondary',displayMode!=='bracket');$('viewCards').classList.toggle('active',displayMode==='cards');$('viewCards').classList.toggle('secondary',displayMode!=='cards');$('bracketBtn').classList.toggle('active',displayMode==='bracket');$('cardsBtn').classList.toggle('active',displayMode==='cards')}
-
-function parseParticipants(){
-const lines=participants.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-if(lines.length<2)throw new Error('2人以上の参加者を入力してください。');
-const seen=new Set();const people=[];
-for(const line of lines){
-const parts=line.split(/\s+/).filter(Boolean);
-if(parts.length<2)throw new Error(`名前と性別をスペースで区切ってください：「${line}」`);
-const gender=normalizeGender(parts.at(-1));
-const name=parts.slice(0,-1).join(' ').trim();
-if(!name||!gender)throw new Error(`名前と性別を確認してください：「${line}」`);
-if(seen.has(name))throw new Error(`同じ名前が複数あります：「${name}」`);seen.add(name);
-people.push({id:crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`,name,gender});
-}
-return people;
-}
-function normalizeGender(g){g=String(g).trim();if(['男子','男','M','m'].includes(g))return'男子';if(['女子','女','F','f'].includes(g))return'女子';return''}
-function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function nextPowerOfTwo(n){let p=1;while(p<n)p*=2;return p}
-function roundName(index,total){const remaining=total-index;if(remaining===1)return'決勝';if(remaining===2)return'準決勝';if(remaining===3)return'準々決勝';return`第${index+1}回戦`}
-function seedPlayers(players){
-const mode=$('shuffleMode').value;
-if(mode==='random')return shuffle(players);
-if(mode==='input')return [...players];
-const boys=shuffle(players.filter(p=>p.gender==='男子'));const girls=shuffle(players.filter(p=>p.gender==='女子'));const out=[];
-while(boys.length||girls.length){if(boys.length&&girls.length){out.push(boys.shift(),girls.shift())}else if(boys.length)out.push(boys.shift());else out.push(girls.shift())}
-return out;
-}
-function startTournament(){
-try{
-const players=seedPlayers(parseParticipants());const size=nextPowerOfTwo(players.length);const slots=[...players];
-while(slots.length<size)slots.push(null);
-const totalRounds=Math.log2(size);const rounds=[];
-for(let r=0;r<totalRounds;r++)rounds.push({name:roundName(r,totalRounds),matches:[]});
-for(let i=0;i<size;i+=2){const a=slots[i],b=slots[i+1];let winner=null;if(a&&!b)winner=a.id;if(!a&&b)winner=b.id;rounds[0].matches.push({a:a?.id||null,b:b?.id||null,winner,bye:!!winner})}
-tournament={players,rounds,currentRound:0,champion:null,createdAt:new Date().toISOString()};
-localStorage.setItem(STORAGE_KEY,JSON.stringify(tournament));showTournament();
-}catch(e){showNotice(e.message)}
-}
-function showNotice(msg){notice.textContent=msg;notice.style.display='block'}
-function showTournament(){notice.style.display='none';$('tournamentCard').style.display='block';$('historyCard').style.display='block';renderTournament();window.scrollTo({top:$('tournamentCard').offsetTop-12,behavior:'smooth'})}
-function playerById(id){return id?tournament.players.find(p=>p.id===id):null}
-function allMatchesComplete(round){return round.matches.every(m=>m.bye||m.winner)}
-function pendingMatchCount(round){return round.matches.filter(m=>!m.bye&&!m.winner&&m.a&&m.b).length}
-function renderTournament(){
-if(!tournament)return;
-syncViewButtons();
-const current=tournament.champion?'大会終了':tournament.rounds[tournament.currentRound].name;
-$('summary').innerHTML=`<span class="pill">参加者 ${tournament.players.length}人</span><span class="pill">全${tournament.rounds.length}ラウンド</span><span class="pill">現在：${current}</span>`;
-if(displayMode==='bracket')renderBracket();else renderCards();
-renderHistory();
-}
-function renderRoundStatus(){
-if(tournament.champion)return'';
-const round=tournament.rounds[tournament.currentRound];
-const pending=pendingMatchCount(round);const total=round.matches.filter(m=>!m.bye&&m.a&&m.b).length;const complete=allMatchesComplete(round);
-return `<div class="round-status"><div><strong>${escapeHtml(round.name)}の結果入力</strong><div class="small">${complete?'全試合の結果が入力されています。確定すると次のラウンドへ進みます。':`残り ${pending} 試合の結果を入力してください（${total}試合中）`}</div></div><button type="button" class="success" ${complete?'':'disabled'} onclick="confirmRound()">${tournament.rounds.length===1||tournament.currentRound===tournament.rounds.length-1?'大会結果を確定':'このラウンドを確定'}</button></div>`;
-}
-function renderBracket(){$('tournamentView').innerHTML=`${renderRoundStatus()}<div class="table-wrap"><div class="bracket">${tournament.rounds.map((round,r)=>`<div class="round-col"><div class="round-title">${escapeHtml(round.name)}</div><div class="matches">${round.matches.map((m,i)=>renderMatch(m,r,i,true)).join('')}</div></div>`).join('')}</div></div>`}
-function renderCards(){$('tournamentView').innerHTML=`${renderRoundStatus()}<div class="cards-view">${tournament.rounds.map((round,r)=>`<div class="round-section"><h3>${escapeHtml(round.name)}</h3>${round.matches.map((m,i)=>renderMatch(m,r,i,false)).join('')}</div>`).join('')}</div>`}
-function renderMatch(m,r,i){
-const a=playerById(m.a),b=playerById(m.b);const isCurrent=r===tournament.currentRound&&!tournament.champion;const canPick=isCurrent&&!m.bye&&a&&b;
-const row=p=>p?`<div class="match-row"><span class="player-name">${escapeHtml(p.name)}</span><span class="gender-tag">${p.gender}</span>${m.winner===p.id?'<span class="winner-tag">勝者</span>':''}</div>`:`<div class="match-row"><span class="player-name small">不戦勝</span></div>`;
-let actions='';
-if(canPick){actions=`<div class="match-actions"><button type="button" class="${m.winner===m.a?'selected':''}" onclick="chooseWinner(${r},${i},'a')">${escapeHtml(a.name)}を勝者にする</button><button type="button" class="${m.winner===m.b?'selected':''}" onclick="chooseWinner(${r},${i},'b')">${escapeHtml(b.name)}を勝者にする</button></div>`}
-else if(isCurrent&&m.winner&&a&&b){actions=`<div class="match-actions"><button type="button" class="selected" onclick="chooseWinner(${r},${i},'${m.winner===m.a?'a':'b'}')">${escapeHtml(playerById(m.winner).name)}が勝者</button></div>`}
-return`<div class="match ${m.bye?'bye':''}">${row(a)}${row(b)}${actions}</div>`;
-}
-window.chooseWinner=function(r,i,which){
-if(!tournament||r!==tournament.currentRound||tournament.champion)return;
-const m=tournament.rounds[r].matches[i];
-const winner=which==='a'?m.a:m.b;
-if(!winner)return;
-m.winner=winner;
-localStorage.setItem(STORAGE_KEY,JSON.stringify(tournament));
-renderTournament();
-}
-window.confirmRound=function(){
-if(!tournament||tournament.champion)return;
-const r=tournament.currentRound;const round=tournament.rounds[r];
-if(!allMatchesComplete(round)){showNotice('まだ勝者が決まっていない試合があります。');return}
-const winners=round.matches.map(m=>m.winner).filter(Boolean);
-if(winners.length===1){tournament.champion=winners[0];localStorage.setItem(STORAGE_KEY,JSON.stringify(tournament));renderTournament();return}
-const next=tournament.rounds[r+1];next.matches=[];
-for(let i=0;i<winners.length;i+=2){next.matches.push({a:winners[i]||null,b:winners[i+1]||null,winner:winners[i+1]?null:winners[i],bye:!winners[i+1]})}
-tournament.currentRound=r+1;localStorage.setItem(STORAGE_KEY,JSON.stringify(tournament));renderTournament();
-window.scrollTo({top:$('tournamentCard').offsetTop-12,behavior:'smooth'});
-}
-function renderHistory(){
-$('history').innerHTML=tournament.rounds.map(round=>`<div class="history-round"><strong>${escapeHtml(round.name)}</strong>${round.matches.filter(m=>m.a||m.b).map(m=>{const a=playerById(m.a),b=playerById(m.b),w=playerById(m.winner);return`<div class="result-row"><span>${a?escapeHtml(a.name):'不戦勝'}${a?`（${a.gender}）`:''} vs ${b?escapeHtml(b.name):'不戦勝'}${b?`（${b.gender}）`:''}</span><span>${w?`勝者：${escapeHtml(w.name)}`:'未確定'}</span></div>`}).join('')}</div>`).join('');
-if(tournament.champion){const p=playerById(tournament.champion);$('championArea').innerHTML=`<div class="champion"><div class="champion-title">大会結果</div><div class="champion-name">${escapeHtml(p.name)}</div><div class="champion-gender">${p.gender}</div><div class="small" style="margin-top:8px">優勝</div></div>`}else $('championArea').innerHTML='';
-}
-function copyResults(){
-if(!tournament)return;let text='じゃんけん大会 対戦結果\n\n';
-for(const round of tournament.rounds){text+=round.name+'\n';for(const m of round.matches){const a=playerById(m.a),b=playerById(m.b),w=playerById(m.winner);if(!a&&!b)continue;text+=`・${a?a.name+'（'+a.gender+'）':'不戦勝'} vs ${b?b.name+'（'+b.gender+'）':'不戦勝'} → ${w?'勝者：'+w.name:'未確定'}\n`}text+='\n'}
-if(tournament.champion){const p=playerById(tournament.champion);text+=`優勝：${p.name}（${p.gender}）\n`}
-navigator.clipboard.writeText(text).then(()=>{showNotice('結果をコピーしました。');notice.scrollIntoView({behavior:'smooth',block:'nearest'})}).catch(()=>showNotice('コピーできませんでした。'));
-}
-function escapeHtml(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
-
-const storedTournament=localStorage.getItem(STORAGE_KEY);
-if(storedTournament){try{tournament=JSON.parse(storedTournament);showTournament()}catch{localStorage.removeItem(STORAGE_KEY)}}
+const $=id=>document.getElementById(id),participants=$('participants'),notice=$('notice');let tournament=null,displayMode='bracket';const SK='jankenTournamentStateV2',IK='jankenParticipantsV2';
+const saved=localStorage.getItem(IK);if(saved)participants.value=saved;participants.oninput=()=>localStorage.setItem(IK,participants.value);
+$('bracketBtn').onclick=()=>setMode('bracket');$('cardsBtn').onclick=()=>setMode('cards');$('viewBracket').onclick=()=>setMode('bracket');$('viewCards').onclick=()=>setMode('cards');$('startBtn').onclick=startTournament;$('clearBtn').onclick=()=>{participants.value='';localStorage.removeItem(IK);participants.focus()};$('resetTournament').onclick=()=>{if(confirm('大会を最初からやり直しますか？現在の結果は削除されます。')){tournament=null;localStorage.removeItem(SK);$('tournamentCard').style.display='none';$('historyCard').style.display='none';scrollTo({top:0,behavior:'smooth'})}};$('copyBtn').onclick=copyResults;$('printBtn').onclick=()=>print();
+function setMode(m){displayMode=m;$('bracketBtn').classList.toggle('active',m==='bracket');$('cardsBtn').classList.toggle('active',m==='cards');$('viewBracket').classList.toggle('active',m==='bracket');$('viewBracket').classList.toggle('secondary',m!=='bracket');$('viewCards').classList.toggle('active',m==='cards');$('viewCards').classList.toggle('secondary',m!=='cards');if(tournament)renderTournament()}
+function parseParticipants(){const lines=participants.value.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);if(lines.length<2)throw Error('2人以上の参加者を入力してください。');const seen=new Set(),out=[];for(const line of lines){const p=line.split(/\s+/).filter(Boolean);if(p.length<2)throw Error(`名前と性別をスペースで区切ってください：「${line}」`);const g=gender(p.at(-1)),name=p.slice(0,-1).join(' ');if(!g||!name)throw Error(`名前と性別を確認してください：「${line}」`);if(seen.has(name))throw Error(`同じ名前が複数あります：「${name}」`);seen.add(name);out.push({id:crypto.randomUUID?crypto.randomUUID():Date.now()+Math.random(),name,gender:g})}return out}
+function gender(g){if(['男子','男','M','m'].includes(g))return'男子';if(['女子','女','F','f'].includes(g))return'女子';return''}function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function pow2(n){let p=1;while(p<n)p*=2;return p}function rname(i,total){const x=total-i;if(x===1)return'決勝';if(x===2)return'準決勝';if(x===3)return'準々決勝';return`第${i+1}回戦`}
+function seed(a){const mode=$('shuffleMode').value;if(mode==='random')return shuffle(a);if(mode==='input')return [...a];let b=shuffle(a.filter(x=>x.gender==='男子')),g=shuffle(a.filter(x=>x.gender==='女子')),o=[];while(b.length||g.length){if(b.length&&g.length)o.push(b.shift(),g.shift());else o.push(b.shift()||g.shift())}return o}
+function startTournament(){try{const players=seed(parseParticipants()),size=pow2(players.length),slots=[...players];while(slots.length<size)slots.push(null);const total=Math.log2(size),rounds=Array.from({length:total},(_,i)=>({name:rname(i,total),matches:[]}));for(let i=0;i<size;i+=2){const a=slots[i],b=slots[i+1],w=a&&!b?a.id:!a&&b?b.id:null;rounds[0].matches.push({a:a?.id||null,b:b?.id||null,winner:w,bye:!!w})}tournament={players,rounds,currentRound:0,champion:null};save();showTournament()}catch(e){showNotice(e.message)}}
+function save(){localStorage.setItem(SK,JSON.stringify(tournament))}function showNotice(s){notice.textContent=s;notice.style.display='block'}function showTournament(){notice.style.display='none';$('tournamentCard').style.display='block';$('historyCard').style.display='block';renderTournament();scrollTo({top:$('tournamentCard').offsetTop-8,behavior:'smooth'})}function player(id){return id?tournament.players.find(p=>p.id===id):null}
+function renderTournament(){if(!tournament)return;const round=tournament.rounds[tournament.currentRound],done=round.matches.filter(m=>m.winner).length,total=round.matches.filter(m=>m.a||m.b).length,finished=!!tournament.champion;$('summary').innerHTML=`<span class="pill">${tournament.players.length}人</span><span class="pill">${finished?'大会終了':round.name}</span>`;const status=finished?'大会終了':`${round.name}　${done}/${total}試合入力済み`;const button=finished?'':`<button class="success" type="button" ${done<total?'disabled':''} onclick="confirmRound()">${round.name}を確定</button>`;const statusHtml=`<div class="round-status"><div><strong>${status}</strong>${!finished?'<div class="progress">全員のじゃんけんが終わってから、まとめて確定してください。</div>':''}</div>${button}</div>`;if(displayMode==='bracket')$('tournamentView').innerHTML=statusHtml+`<div class="table-wrap"><div class="bracket">${tournament.rounds.map((x,r)=>`<div class="round-col"><div class="round-title">${x.name}</div><div class="matches">${x.matches.map((m,i)=>matchHtml(m,r,i)).join('')}</div></div>`).join('')}</div></div>`;else $('tournamentView').innerHTML=statusHtml+`<div class="cards-view">${tournament.rounds.map((x,r)=>`<div class="round-section"><h3>${x.name}</h3>${x.matches.map((m,i)=>matchHtml(m,r,i)).join('')}</div>`).join('')}</div>`;renderHistory()}
+function matchHtml(m,r,i){const a=player(m.a),b=player(m.b),can=r===tournament.currentRound&&!tournament.champion&&!m.bye&&a&&b;const row=p=>p?`<div class="match-row"><span class="player-name">${esc(p.name)}</span><span class="gender-tag">${p.gender}</span>${m.winner===p.id?'<span class="winner-tag">勝</span>':''}</div>`:`<div class="match-row"><span class="player-name small">不戦勝</span></div>`;let actions='';if(can)actions=`<div class="match-actions"><button type="button" class="${m.winner===m.a?'selected':''}" onclick="chooseWinner(${r},${i},'a')">${esc(a.name)}</button><button type="button" class="${m.winner===m.b?'selected':''}" onclick="chooseWinner(${r},${i},'b')">${esc(b.name)}</button></div>`;return`<div class="match ${m.bye?'bye':''}">${row(a)}${row(b)}${actions}</div>`}
+window.chooseWinner=(r,i,w)=>{if(!tournament||r!==tournament.currentRound)return;const m=tournament.rounds[r].matches[i];m.winner=w==='a'?m.a:m.b;save();renderTournament()};
+window.confirmRound=()=>{if(!tournament)return;const r=tournament.currentRound,round=tournament.rounds[r];if(!round.matches.filter(m=>m.a||m.b).every(m=>m.winner)){showNotice('すべての対戦の勝者を選択してください。');return}const winners=round.matches.map(m=>m.winner).filter(Boolean);if(winners.length===1){tournament.champion=winners[0];save();renderTournament();return}const next=tournament.rounds[r+1];next.matches=[];for(let i=0;i<winners.length;i+=2)next.matches.push({a:winners[i]||null,b:winners[i+1]||null,winner:winners[i+1]?null:winners[i],bye:!winners[i+1]});tournament.currentRound=r+1;save();renderTournament()};
+function renderHistory(){$('history').innerHTML=tournament.rounds.map(x=>`<div class="history-round"><strong>${x.name}</strong>${x.matches.filter(m=>m.a||m.b).map(m=>{const a=player(m.a),b=player(m.b),w=player(m.winner);return`<div class="result-row"><span>${a?esc(a.name):'不戦勝'}${b?' vs '+esc(b.name):''}</span><span>${w?'勝：'+esc(w.name):'未確定'}</span></div>`}).join('')}</div>`).join('');const p=player(tournament.champion);$('championArea').innerHTML=p?`<div class="champion"><div class="champion-title">優勝</div><div class="champion-name">${esc(p.name)}</div><div class="champion-gender">${p.gender}</div></div>`:''}
+function copyResults(){let t='じゃんけん大会 対戦結果\n\n';for(const x of tournament.rounds){t+=x.name+'\n';for(const m of x.matches){const a=player(m.a),b=player(m.b),w=player(m.winner);if(!a&&!b)continue;t+=`・${a?a.name:'不戦勝'}${b?' vs '+b.name:''} → ${w?'勝者：'+w.name:'未確定'}\n`}t+='\n'}if(tournament.champion)t+=`優勝：${player(tournament.champion).name}\n`;navigator.clipboard.writeText(t).then(()=>showNotice('結果をコピーしました。')).catch(()=>showNotice('コピーできませんでした。'))}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+const old=localStorage.getItem(SK);if(old)try{tournament=JSON.parse(old);showTournament()}catch{localStorage.removeItem(SK)}
 </script>
 </body>
 </html>
